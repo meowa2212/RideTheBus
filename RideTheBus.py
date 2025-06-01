@@ -4,3 +4,7 @@ Wojciech Gorzynski
 
 an implementation of the "RideTheBus" game from a game called "Schedule 1"
 '''
+from DeckOfCards import Deck
+
+if __name__ == "__main__":
+    pass
