@@ -6,15 +6,22 @@ A program used for simulating a deck of cards
 '''
 from random import randint
 
-class Deck():
+class Deck:
     def __init__(self):
-        self.cards = []
-        for suit in ["C", "D", "H", "S"]:
-            for value in ["2","3","4","5","6","7","8","9","10","J","Q","K","A"]:
-                self.cards.append(value+suit)
+        self.cards = self.generate_deck()
+
+    def generate_deck(self):
+        deck = []
+        for suit in "CDHS":
+            for value in "2345678910JQKA":
+                deck.append(value+suit)
+        return deck
+
+    def reset(self):
+        self.cards = self.generate_deck()
     
     def shuffle(self):
-        temp = self.cards
+        temp = self.cards[:]
         newCards = []
         while len(temp) != 1:
             index = randint(0, len(temp)-1)
