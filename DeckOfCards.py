@@ -13,7 +13,7 @@ class Deck:
     def generate_deck(self):
         deck = []
         for suit in "CDHS":
-            for value in "2345678910JQKA":
+            for value in ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]:
                 deck.append(value+suit)
         return deck
 
