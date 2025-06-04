@@ -7,7 +7,7 @@ into a discord bot
 '''
 
 # Replace this with your bot token
-TOKEN = "MTM3OTA4NTg4ODkyNzA0MzY5Ng.GQSGf5.GPeZHttZt8RUaSMohuHbkTph5fre0dHc8KHYU4"
+TOKEN = "token"
 
 import discord
 from discord.ext import commands
