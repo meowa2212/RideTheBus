@@ -3,59 +3,57 @@ Wojciech Gorzynski
 04-06-2025 v1
 
 an implementation of the "RideTheBus" game from a game called "Schedule 1"
+tuned for use in a discord bot
 '''
 from DeckOfCards import Deck
 
 class RideTheBus(Deck):
-    def __init__(self, balance):
+    def __init__(self, balance, bet):
         super().__init__()
-        self.balance = balance
+        self.shuffle()
+        self.balance = balance - bet
         self.multiplier = 1
         self.cards_used = []
+        self.bet = bet
 
     def play_game(self):
         self.shuffle()
-        print("Welcome!")
-        print(f"Balance: {self.balance}$")
         self.bet = int(input("Place your bet: "))
-        self.clear_scene()
+        
         self.balance -= self.bet
 
         if self.color(input("Red or Black: ")):
-            self.clear_scene()
+            
             print(self.cards_used)
             if self.high_low(input("High or Low: ")):
-                self.clear_scene()
+                
                 print(self.cards_used)
                 if self.in_out(input("In or Out: ")):
-                    self.clear_scene()
+                    
                     print(self.cards_used)
                     if self.suit(input("Clubs, Diamonds, Hearts or Spades: ")):
                         print(self.cards_used)
         self.end_game()
                  
     def color(self, choice):
-        self.clear_scene()
-        
+        print("starting color")
+        print(self.last_card())
         if self.last_card()[-1:] in ["D", "H"]:
             color = "Red"
         else:
             color = "Black"
-        self.cards_used.append(self.last_card())
-        print(f"Card: {self.last_card(1)}")
-        print(f"Color: {color}")
+        self.cards_used.append(self.last_card(1))
+
         if color == choice:
             self.multiplier = 2
-            if self.next_stage():
-                return True
-            else:
-                return False
+            print("color won")
+            return True
         else:
             self.multiplier = 0
+            print("color lost")
             return False
     
     def high_low(self, choice):
-        self.clear_scene()
         
         value_last = self.translate_value(self.cards_used[0])
         while True:
@@ -70,22 +68,15 @@ class RideTheBus(Deck):
         else:
             height = "Low"
             self.cards_used.insert(0, card)
-        print(f"Card: {card}")
-        print(f"Height: {height}")
         
         if height == choice:
             self.multiplier = 3
-            if self.next_stage():
-                return True
-            else:
-                return False
+            return True
         else:
             self.multiplier = 0
             return False
     
     def in_out(self, choice):
-        self.clear_scene()
-        
         value_start = self.translate_value(self.cards_used[0])
         value_end = self.translate_value(self.cards_used[1])
         while True:
@@ -94,34 +85,24 @@ class RideTheBus(Deck):
             if value not in [value_start, value_end]:
                 break
         self.cards_used.append(card)
-        
+    
         if value_start < value < value_end:
             stand = "In"
         else:
             stand = "Out"    
-        print(f"Card: {card}")
-        print(f"Stand: {stand}")
         
         if choice == stand:
             self.multiplier = 4
-            if self.next_stage():
-                return True
-            else:
-                return False
+            return True
         else:
             self.multiplier = 0
             return False
     
     def suit(self, choice):
-        self.clear_scene()
-        
         card = self.last_card(1)
         self.cards_used.append(card)
-        print(f"Card: {card}")
-        print(f"Suit: {card[-1:]}")
         
         if choice.capitalize()[0] == card[-1:]:
-            self.multiplier = 20
             return True
         else:
             self.multiplier = 0
@@ -132,7 +113,7 @@ class RideTheBus(Deck):
         values = {"J":11, "Q":12, "K":13, "A":14}
         return values.get(card_value, int(card_value))
     
-    def choice(self, message):
+    def choice(self, message): #needs to be rewritten
         while True:
             choice = input(f"{message} (y/n): ").capitalize()[0]
             if choice in ["Y", "N"]:
@@ -145,7 +126,7 @@ class RideTheBus(Deck):
         elif choice == "N":
             return False
     
-    def next_stage(self):
+    def next_stage(self): #needs to be rewritten
         print("Next Stage")
         print(f"Payout: {self.bet*self.multiplier}$")
         if self.choice("Continue?"):
@@ -154,15 +135,4 @@ class RideTheBus(Deck):
             return False
     
     def end_game(self):
-        print("End of game!")
-        print(f"Payout: {self.bet*self.multiplier}$")
         self.balance += self.bet*self.multiplier
-        print(f"Balance: {self.balance}$")
-    
-    def clear_scene(self):
-        print("=====RideTheBus====Meowa====")     
-            
-
-if __name__ == "__main__":
-    game = RideTheBus(0)
-    game.play_game()
