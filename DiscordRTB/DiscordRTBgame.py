@@ -9,31 +9,17 @@ from DeckOfCards import Deck
 
 class RideTheBus(Deck):
     def __init__(self, balance, bet):
+        print("starting game")
         super().__init__()
         self.shuffle()
         self.balance = balance - bet
         self.multiplier = 1
         self.cards_used = []
         self.bet = bet
-
-    def play_game(self):
-        self.shuffle()
-        self.bet = int(input("Place your bet: "))
-        
-        self.balance -= self.bet
-
-        if self.color(input("Red or Black: ")):
-            
-            print(self.cards_used)
-            if self.high_low(input("High or Low: ")):
-                
-                print(self.cards_used)
-                if self.in_out(input("In or Out: ")):
-                    
-                    print(self.cards_used)
-                    if self.suit(input("Clubs, Diamonds, Hearts or Spades: ")):
-                        print(self.cards_used)
-        self.end_game()
+        self.color_passed = False
+        self.high_low_passed = False
+        self.in_out_passed = False
+        self.suit_passed = False
                  
     def color(self, choice):
         print("starting color")
@@ -54,7 +40,8 @@ class RideTheBus(Deck):
             return False
     
     def high_low(self, choice):
-        
+        print("starting high_low")
+        print(self.last_card())
         value_last = self.translate_value(self.cards_used[0])
         while True:
             card = self.last_card(1)
@@ -71,12 +58,16 @@ class RideTheBus(Deck):
         
         if height == choice:
             self.multiplier = 3
+            print("high_low won")
             return True
         else:
             self.multiplier = 0
+            print("high_low lost")
             return False
     
     def in_out(self, choice):
+        print("starting in_out")
+        print(self.last_card())
         value_start = self.translate_value(self.cards_used[0])
         value_end = self.translate_value(self.cards_used[1])
         while True:
@@ -93,46 +84,28 @@ class RideTheBus(Deck):
         
         if choice == stand:
             self.multiplier = 4
+            print("in_out won")
             return True
         else:
             self.multiplier = 0
+            print("in_out lost")
             return False
     
     def suit(self, choice):
+        print("starting suit")
+        print(self.last_card())
         card = self.last_card(1)
         self.cards_used.append(card)
         
         if choice.capitalize()[0] == card[-1:]:
+            print("suit won")
             return True
         else:
             self.multiplier = 0
+            print("suit lost")
             return False
     
     def translate_value(self, card):
         card_value = card[:-1]
         values = {"J":11, "Q":12, "K":13, "A":14}
         return values.get(card_value, int(card_value))
-    
-    def choice(self, message): #needs to be rewritten
-        while True:
-            choice = input(f"{message} (y/n): ").capitalize()[0]
-            if choice in ["Y", "N"]:
-                break
-            else:
-                print("Wrong Choice")
-
-        if choice == "Y":
-            return True
-        elif choice == "N":
-            return False
-    
-    def next_stage(self): #needs to be rewritten
-        print("Next Stage")
-        print(f"Payout: {self.bet*self.multiplier}$")
-        if self.choice("Continue?"):
-            return True
-        else:
-            return False
-    
-    def end_game(self):
-        self.balance += self.bet*self.multiplier

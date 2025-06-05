@@ -6,9 +6,6 @@ an implementation of the "RideTheBus" game from a game called "Schedule 1"
 into a discord bot
 '''
 
-# Replace this with your bot token
-TOKEN = "token"
-
 import discord
 from discord.ext import commands
 from DiscordRTBgame import RideTheBus
@@ -39,21 +36,23 @@ class View(discord.ui.View):
     def __init__(self, embed: discord.Embed, user: discord.User, game: RideTheBus, timeout=180):
         super().__init__(timeout=timeout)
         self.welcome_embed = embed
-        self.stored_embed = embed
         self.user = user
         self.game = game
 
-        self.lost_screen = discord.Embed(
+    def lost_embed(self):
+        return discord.Embed(
             title="You Lost!",
-            description='''Your bet is gone!
-                            Try again.
-            ''',
+            description=f'''Your balance is {self.game.balance}
+                            used cards: {self.game.cards_used}''',
             color=discord.Color.red()
         )
 
-        self.continue_screen = discord.Embed(
-            title="Do you want to continue?",
-            color=discord.Color.blue()
+    def won_embed(self):
+        return discord.Embed(
+            title="You Won!",
+            description=f'''You won this round, your bet is {self.game.bet}
+                            used cards: {self.game.cards_used}''',
+            color=discord.Color.gold()
         )
 
 class ViewWelcome(View):
@@ -66,20 +65,20 @@ class ViewWelcome(View):
             await interaction.response.send_message("You can't use this button.", ephemeral=True)
             return
 
-        self.stored_embed = discord.Embed(
+        color_embed = discord.Embed(
             title="Color Game!",
-            description='''Choose if the next card will be Red or Black! 
+            description='''Choose if the next card will be Red or Black. 
                             multiplier = 2x''',
-            color=discord.Color.green()
+            color=discord.Color.blue()
         )
-        new_view = ColorGame(self.stored_embed, self.user, self.game)
-        await interaction.channel.send(embed=self.stored_embed, view=new_view)
+        new_view = ColorGame(color_embed, self.user, self.game)
+        await interaction.channel.send(embed=color_embed, view=new_view)
 
         for item in self.children:
             if isinstance(item, discord.ui.Button):
                 item.disabled = True
 
-        await interaction.response.edit_message(view=self)
+        await interaction.response.edit_message(view = self)
 
     @discord.ui.button(label="Info", style=discord.ButtonStyle.primary, emoji="ℹ️")
     async def info_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -109,13 +108,13 @@ class ColorGame(View):
             return
 
         if self.game.color("Red"):
+            self.game.color_passed = True
             self.game.bet *= 2
-            new_view = ViewWelcome(self.welcome_embed, self.user, self.game)
-            await interaction.channel.send(embed=self.welcome_embed, view=new_view)
+            new_view = Continue(embed = self.won_embed(), user = self.user, game = self.game)
+            await interaction.channel.send(embed = self.won_embed(), view = new_view)
         else:
-            self.game.bet = 100
-            new_view = ViewWelcome(self.lost_screen, self.user, self.game)
-            await interaction.channel.send(embed=self.lost_screen, view=new_view)
+            self.game.bet = 0
+            await interaction.channel.send(embed = self.lost_embed())
 
         for item in self.children:
             if isinstance(item, discord.ui.Button):
@@ -130,21 +129,105 @@ class ColorGame(View):
             return
 
         if self.game.color("Black"):
+            self.game.color_passed = True
             self.game.bet *= 2
-            new_view = ViewWelcome(self.welcome_embed, self.user, self.game)
-            await interaction.channel.send(embed=self.welcome_embed, view=new_view)
+            new_view = Continue(embed = self.won_embed(), user = self.user, game = self.game)
+            await interaction.channel.send(embed = self.won_embed(), view = new_view)
         else:
-            self.game.bet = 100
-            new_view = ViewWelcome(self.lost_screen, self.user, self.game)
-            await interaction.channel.send(embed=self.lost_screen, view=new_view)
+            self.game.bet = 0
+            await interaction.channel.send(embed = self.lost_embed())
+
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                item.disabled = True
+
+        await interaction.response.edit_message(view = self)
+    
+class Continue(View):
+    def __init__(self, embed, user, game, timeout=180):
+        super().__init__(embed, user, game, timeout)
+
+    @discord.ui.button(label="Continue", style=discord.ButtonStyle.primary)
+    async def red_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.user:
+            await interaction.response.send_message("You can't use this button.", ephemeral = True)
+            return
+
+        if self.game.suit_passed:
+            self.game.balance += self.game.bet
+            continue_embed = discord.Embed(
+                title = "You Won!",
+                description = f'''You won {self.game.bet}, you now have {self.game.balance}
+                                cards used {self.game.cards_used}''',
+                color = discord.Color.gold()
+            )
+            await interaction.channel.send(embed = continue_embed)
+            
+        
+        elif self.game.in_out_passed:
+            continue_embed = discord.Embed(
+                title = "Suit Game!",
+                description = '''Choose the next card's suit.
+                                multiplier = 20x''',
+                color = discord.Color.blue()
+            )
+            self.game.suit_passed = True
+            new_view = Continue(embed = continue_embed, user = self.user, game = self.game)
+            await interaction.channel.send(embed = continue_embed, view = new_view)
+       
+       
+        elif self.game.high_low_passed:
+            continue_embed = discord.Embed(
+                title = "In and Out Game!",
+                description = '''Choose if the next card will be inside the previous two or on the outside.
+                                multiplier = 4x''',
+                color = discord.Color.blue()
+            )
+            self.game.in_out_passed = True
+            new_view = Continue(embed = continue_embed, user = self.user, game = self.game)
+            await interaction.channel.send(embed = continue_embed, view = new_view)
+        
+        
+        elif self.game.color_passed:
+            continue_embed = discord.Embed(
+                title = "High Low Game!",
+                description = '''Choose if the next card will be of higher value or lower than the previous.
+                                multiplier = 3x''',
+                color = discord.Color.blue()
+            )
+            self.game.high_low_passed = True
+            new_view = Continue(embed = continue_embed, user = self.user, game = self.game)
+            await interaction.channel.send(embed = continue_embed, view = new_view)          
+
+
 
         for item in self.children:
             if isinstance(item, discord.ui.Button):
                 item.disabled = True
 
         await interaction.response.edit_message(view=self)
-    
 
+    @discord.ui.button(label="Payout", style=discord.ButtonStyle.secondary)
+    async def black_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self.user:
+            await interaction.response.send_message("You can't use this button.", ephemeral=True)
+            return
+
+        self.game.balance += self.game.bet
+        
+        quit_embed = discord.Embed(
+            title = "End of Game",
+            description = f"You paid out, you won {self.game.bet}, you now have {self.game.balance}",
+            color = discord.Color.greyple()
+        )
+        
+        await interaction.channel.send(embed = quit_embed)
+
+        for item in self.children:
+            if isinstance(item, discord.ui.Button):
+                item.disabled = True
+
+        await interaction.response.edit_message(view=self)
 
 # Run the bot
-bot.run(TOKEN)
+bot.run("token here")
