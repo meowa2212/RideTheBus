@@ -32,6 +32,7 @@ class RideTheBus(Deck):
 
         if color == choice:
             self.multiplier = 2
+            self.color_passed = True
             print("color won")
             return True
         else:
@@ -57,6 +58,7 @@ class RideTheBus(Deck):
             self.cards_used.insert(0, card)
         
         if height == choice:
+            self.high_low_passed = True
             self.multiplier = 3
             print("high_low won")
             return True
@@ -83,6 +85,7 @@ class RideTheBus(Deck):
             stand = "Out"    
         
         if choice == stand:
+            self.in_out_passed = True
             self.multiplier = 4
             print("in_out won")
             return True
@@ -97,7 +100,9 @@ class RideTheBus(Deck):
         card = self.last_card(1)
         self.cards_used.append(card)
         
-        if choice.capitalize()[0] == card[-1:]:
+        if choice == card[-1:]:
+            self.suit_passed = True
+            self.multiplier = 20
             print("suit won")
             return True
         else:
@@ -108,4 +113,7 @@ class RideTheBus(Deck):
     def translate_value(self, card):
         card_value = card[:-1]
         values = {"J":11, "Q":12, "K":13, "A":14}
-        return values.get(card_value, int(card_value))
+        for key, value in values.items():
+            if card_value.count(key) == 1:
+                return value
+        return int(card_value)
