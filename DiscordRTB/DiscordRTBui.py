@@ -457,4 +457,4 @@ class Continue(View):
         await interaction.response.edit_message(view=self)
 
 # Run the bot
-bot.run("MTM3OTA4NTg4ODkyNzA0MzY5Ng.GzWTPZ.7VA2BFFzGRXczniOXETRDgZROdXmfyo30kycDM")
+bot.run("bot token here")
