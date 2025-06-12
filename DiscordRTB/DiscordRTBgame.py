@@ -60,6 +60,10 @@ class RideTheBus(Deck):
     def in_out(self, choice):
         value_start = self.translate_value(self.cards_used[0])
         value_end = self.translate_value(self.cards_used[1])
+        
+        if value_end < value_start:
+            value_end, value_start = value_start, value_end
+            
         while True:
             card = self.last_card(1)
             value = self.translate_value(card)
